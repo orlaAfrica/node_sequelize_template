@@ -1,0 +1,1 @@
+# node_sequelize_template
