@@ -1,0 +1,79 @@
+version: "2"
+services:
+  web:
+    container_name: merchant
+    platform: linux/amd64
+    build: .
+    command: sh -c "/wait && npm run build && npx sequelize-cli db:migrate && npm run dev"
+    volumes:
+      - .:/usr/app/
+    ports:
+      - "8091:8091"
+    links:
+      - postgres
+      - redis
+      - postgres_test
+    depends_on:
+      - postgres
+      - redis
+      - postgres_test
+    restart: on-failure
+    networks:
+      - authentication_some-net
+    environment:
+      REDIS_URL: "${REDIS_URL}"
+      DB_URL: "${DB_URL}"
+      DB_NAME: "${DB_NAME}"
+      DB_HOST: "${DB_HOST}"
+      DB_PORT: "${DB_PORT}"
+      DB_USERNAME: "${DB_USERNAME}"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DB_TEST_HOST: "${DB_TEST_HOST}"
+      WAIT_HOSTS: postgres:5432
+  postgres:
+    container_name: zazuu_merchant_postgres
+    image: postgres
+    restart: always
+    hostname: postgres
+    networks:
+      - authentication_some-net
+    environment:
+      POSTGRES_USER: "${DB_USERNAME}"
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: "${DB_NAME}"
+    volumes:
+      - ./data/local:/var/lib/postgresql/data
+    ports:
+      - "5451:5432"
+  postgres_test:
+    container_name: zazuu_merchant_postgres_test
+    image: postgres
+    restart: always
+    hostname: postgres
+    networks:
+      - authentication_some-net
+    environment:
+      POSTGRES_USER: "${DB_USERNAME}"
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: "${DB_NAME}"
+    volumes:
+      - ./data/test:/var/lib/postgresql/data
+    ports:
+      - "5452:5432"
+  redis:
+    image: redis
+    restart: always
+    networks:
+      - authentication_some-net
+    container_name: zazuu_merchant_redis
+    hostname: redis
+    expose:
+      - 6379
+    ports:
+      - "6368:6379"
+networks:
+  authentication_some-net:
+    external: true

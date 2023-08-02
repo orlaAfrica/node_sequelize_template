@@ -1,1 +1,1 @@
-# node_sequelize_template
+# computer-village
